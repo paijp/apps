@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>音声Todoメモ</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=DM+Mono:wght@400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&display=swap');
 
   :root {
     --bg: #0f0f11;
@@ -37,89 +37,138 @@
   }
 
   .header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
-
   .logo-dot {
     width: 8px; height: 8px; border-radius: 50%;
     background: var(--accent); box-shadow: 0 0 12px var(--accent);
   }
-
   h1 { font-size: 20px; font-weight: 500; letter-spacing: -0.3px; }
   .header-sub { font-size: 12px; color: var(--muted); padding-left: 18px; }
 
   .main { padding: 32px 20px; display: flex; flex-direction: column; align-items: center; gap: 32px; }
 
-  /* MIC */
-  .mic-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
+  /* CONTROLS: 3ボタン横並び + クリアボタン左下 */
+  .controls-wrap { width: 100%; display: flex; flex-direction: column; gap: 10px; }
 
-  #mic-btn {
-    width: 100px; height: 100px; border-radius: 50%;
-    background: var(--surface2); border: 1px solid var(--border);
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s; position: relative;
+  .controls-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
   }
-  #mic-btn:active { transform: scale(0.92); }
-  #mic-btn.listening {
-    border-color: var(--accent);
+
+  .ctrl-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 7px; padding: 16px 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; cursor: pointer; font-family: inherit;
+    transition: all 0.18s; color: var(--muted); font-size: 11px;
+    -webkit-appearance: none; user-select: none;
+  }
+  .ctrl-btn svg { width: 24px; height: 24px; flex-shrink: 0; }
+  .ctrl-btn:active { transform: scale(0.94); }
+
+  #start-btn { border-color: rgba(124,106,247,0.3); }
+  #start-btn.active {
     background: rgba(124,106,247,0.15);
-    animation: ripple 1.4s infinite;
+    border-color: var(--accent);
+    color: var(--accent2);
   }
-  #mic-btn.listening svg { stroke: var(--accent2); }
+  #start-btn.active svg { animation: pulse-icon 1.2s infinite; }
+  @keyframes pulse-icon { 0%,100%{opacity:1} 50%{opacity:0.45} }
 
-  @keyframes ripple {
-    0%   { box-shadow: 0 0 0 0 rgba(124,106,247,0.45); }
-    70%  { box-shadow: 0 0 0 24px rgba(124,106,247,0); }
-    100% { box-shadow: 0 0 0 0 rgba(124,106,247,0); }
+  #stop-btn { opacity: 0.3; pointer-events: none; }
+  #stop-btn.enabled { opacity: 1; pointer-events: auto; }
+  #stop-btn.enabled:active {
+    background: rgba(248,113,113,0.12);
+    border-color: var(--danger);
+    color: var(--danger);
   }
 
-  #mic-btn svg { width: 38px; height: 38px; transition: stroke 0.2s; }
+  #mail-btn:active {
+    background: rgba(52,211,153,0.12);
+    border-color: var(--green);
+    color: var(--green);
+  }
 
+  /* CLEAR BUTTON — 左端・小さめ・長押し */
+  .clear-row { display: flex; align-items: center; gap: 10px; }
+
+  #clear-btn {
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px; padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; cursor: pointer; font-family: inherit;
+    color: var(--muted); font-size: 10px;
+    -webkit-appearance: none; user-select: none;
+    transition: border-color 0.2s, color 0.2s;
+    width: 72px;
+  }
+  #clear-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  /* 長押しプログレスバー */
+  #clear-btn::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: var(--danger);
+    border-radius: 0 0 12px 12px;
+    transition: none;
+  }
+  #clear-btn.pressing {
+    border-color: rgba(248,113,113,0.4);
+    color: var(--danger);
+  }
+  #clear-btn.pressing::after {
+    width: 100%;
+    transition: width 0.8s linear;
+  }
+
+  .clear-hint {
+    font-size: 11px; color: var(--muted); opacity: 0.6;
+  }
+
+  /* STATUS */
+  .status-wrap { width: 100%; text-align: center; }
   #mic-status {
-    font-size: 14px; color: var(--muted); text-align: center;
+    font-size: 14px; color: var(--muted);
     transition: color 0.2s; min-height: 20px;
   }
   #mic-status.active { color: var(--accent2); }
-
   #interim {
     font-size: 14px; color: var(--muted); font-style: italic;
-    text-align: center; min-height: 20px; padding: 0 16px;
+    min-height: 20px; margin-top: 6px; padding: 0 8px;
   }
 
   /* LIST */
   .list-wrap { width: 100%; }
-
   .list-header {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 14px;
   }
-
   .list-label {
     font-size: 11px; font-weight: 500; letter-spacing: 1.2px;
     color: var(--muted); text-transform: uppercase;
   }
-
   #count-badge {
     font-size: 12px; color: var(--muted);
     background: var(--surface2); border: 1px solid var(--border);
     border-radius: 999px; padding: 2px 10px;
   }
-
   #todo-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-
   .todo-item {
     display: flex; align-items: flex-start; gap: 12px;
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 14px; padding: 13px 14px;
-    animation: slideIn 0.22s ease;
-    transition: opacity 0.2s;
+    animation: slideIn 0.22s ease; transition: opacity 0.2s;
   }
   .todo-item.done { opacity: 0.35; }
   .todo-item.done .todo-text { text-decoration: line-through; }
-
   @keyframes slideIn {
     from { opacity: 0; transform: translateY(-6px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-
   .todo-check {
     width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
     border: 1.5px solid rgba(255,255,255,0.2); background: transparent;
@@ -132,9 +181,7 @@
     border: 2px solid #0f0f11; border-top: none; border-left: none;
     transform: rotate(45deg) translate(-1px, -1px);
   }
-
   .todo-text { flex: 1; font-size: 15px; line-height: 1.5; }
-
   .todo-del {
     width: 28px; height: 28px; border-radius: 8px; border: none;
     background: transparent; color: var(--muted); cursor: pointer;
@@ -142,22 +189,9 @@
     transition: all 0.15s; flex-shrink: 0;
   }
   .todo-del:active { background: rgba(248,113,113,0.15); color: var(--danger); }
-
   #empty {
-    text-align: center; color: var(--muted); font-size: 14px; padding: 32px 0;
+    text-align: center; color: var(--muted); font-size: 14px; padding: 32px 0; line-height: 2;
   }
-
-  /* EMAIL BUTTON */
-  #mail-btn {
-    width: 100%; padding: 16px;
-    background: transparent; border: 1px solid var(--border);
-    border-radius: 16px; color: var(--muted);
-    font-size: 15px; font-family: inherit; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    transition: all 0.2s;
-  }
-  #mail-btn:active { border-color: var(--accent); color: var(--accent2); }
-  #mail-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -167,21 +201,55 @@
     <div class="logo-dot"></div>
     <h1>音声Todoメモ</h1>
   </div>
-  <div class="header-sub">タップして話す → 繰り返し入力 → メールで送る</div>
+  <div class="header-sub">話してタスクを追加 → メールで送る</div>
 </header>
 
 <div class="main">
 
-  <div class="mic-wrap">
-    <button id="mic-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="9" y="2" width="6" height="11" rx="3"/>
-        <path d="M5 10a7 7 0 0 0 14 0"/>
-        <line x1="12" y1="19" x2="12" y2="22"/>
-        <line x1="8" y1="22" x2="16" y2="22"/>
-      </svg>
-    </button>
-    <div id="mic-status">タップして音声入力開始</div>
+  <div class="controls-wrap">
+    <div class="controls-row">
+      <button class="ctrl-btn" id="start-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="2" width="6" height="11" rx="3"/>
+          <path d="M5 10a7 7 0 0 0 14 0"/>
+          <line x1="12" y1="19" x2="12" y2="22"/>
+          <line x1="8" y1="22" x2="16" y2="22"/>
+        </svg>
+        録音開始
+      </button>
+
+      <button class="ctrl-btn" id="stop-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="2"/>
+        </svg>
+        録音停止
+      </button>
+
+      <button class="ctrl-btn" id="mail-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="M2 7l10 7 10-7"/>
+        </svg>
+        メール送信
+      </button>
+    </div>
+
+    <div class="clear-row">
+      <button id="clear-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6M14 11v6"/>
+          <path d="M9 6V4h6v2"/>
+        </svg>
+        クリア
+      </button>
+      <span class="clear-hint">長押しで削除</span>
+    </div>
+  </div>
+
+  <div class="status-wrap">
+    <div id="mic-status">録音開始ボタンを押してください</div>
     <div id="interim"></div>
   </div>
 
@@ -191,16 +259,8 @@
       <span id="count-badge">0件</span>
     </div>
     <ul id="todo-list"></ul>
-    <div id="empty">タスクがありません<br><span style="font-size:12px;opacity:0.6">マイクボタンを押して話してください</span></div>
+    <div id="empty">タスクがありません<br><span style="font-size:12px;opacity:0.6">録音開始ボタンを押して話してください</span></div>
   </div>
-
-  <button id="mail-btn">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="2" y="4" width="20" height="16" rx="2"/>
-      <path d="M2 7l10 7 10-7"/>
-    </svg>
-    メールで送る
-  </button>
 
 </div>
 
@@ -208,21 +268,25 @@
   let todos = [];
   let listening = false;
   let recognition = null;
+  let clearTimer = null;
+  const LONG_PRESS_MS = 800;
 
-  const micBtn = document.getElementById('mic-btn');
-  const micStatus = document.getElementById('mic-status');
-  const interimEl = document.getElementById('interim');
-  const listEl = document.getElementById('todo-list');
-  const emptyEl = document.getElementById('empty');
+  const startBtn   = document.getElementById('start-btn');
+  const stopBtn    = document.getElementById('stop-btn');
+  const mailBtn    = document.getElementById('mail-btn');
+  const clearBtn   = document.getElementById('clear-btn');
+  const micStatus  = document.getElementById('mic-status');
+  const interimEl  = document.getElementById('interim');
+  const listEl     = document.getElementById('todo-list');
+  const emptyEl    = document.getElementById('empty');
   const countBadge = document.getElementById('count-badge');
-  const mailBtn = document.getElementById('mail-btn');
 
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
   if (!SR) {
     micStatus.textContent = '音声認識に対応していないブラウザです';
-    micBtn.style.opacity = '0.4';
-    micBtn.style.pointerEvents = 'none';
+    startBtn.style.opacity = '0.4';
+    startBtn.style.pointerEvents = 'none';
   } else {
     setupRecognition();
   }
@@ -247,7 +311,6 @@
       }
       interimEl.textContent = interim;
       if (final.trim()) {
-        // 読点・句点・接続詞で分割
         const parts = final.trim()
           .split(/[、。,，\n]|(?:あと|それと|そして|また)(?=\S)/)
           .map(s => s.trim()).filter(s => s.length > 0);
@@ -258,16 +321,15 @@
 
     recognition.onerror = (e) => {
       if (e.error === 'no-speech') {
-        // 無音でも継続
         if (listening) restartRecognition();
       } else {
         micStatus.textContent = 'エラー: ' + e.error;
-        stopListening();
+        setListening(false);
+        showStopped();
       }
     };
 
     recognition.onend = () => {
-      // 連続モード：停止ボタンを押すまで再起動
       if (listening) restartRecognition();
       else showStopped();
     };
@@ -276,37 +338,66 @@
   function restartRecognition() {
     interimEl.textContent = '';
     setTimeout(() => {
-      if (listening) {
-        try { recognition.start(); } catch(e) {}
-      }
-    }, 100);
+      if (listening) try { recognition.start(); } catch(e) {}
+    }, 120);
   }
 
   function showStopped() {
-    micBtn.classList.remove('listening');
-    micStatus.textContent = 'タップして音声入力開始';
+    micStatus.textContent = '録音開始ボタンを押してください';
     micStatus.classList.remove('active');
     interimEl.textContent = '';
   }
 
-  function stopListening() {
-    listening = false;
-    try { recognition.stop(); } catch(e) {}
-    showStopped();
+  function setListening(val) {
+    listening = val;
+    startBtn.classList.toggle('active', val);
+    stopBtn.classList.toggle('enabled', val);
   }
 
-  micBtn.addEventListener('click', () => {
-    if (!SR) return;
-    if (listening) {
-      stopListening();
-    } else {
-      listening = true;
-      micBtn.classList.add('listening');
-      micStatus.textContent = '聞いています...';
-      micStatus.classList.add('active');
-      try { recognition.start(); } catch(e) {}
-    }
+  startBtn.addEventListener('click', () => {
+    if (!SR || listening) return;
+    setListening(true);
+    try { recognition.start(); } catch(e) {}
   });
+
+  stopBtn.addEventListener('click', () => {
+    if (!listening) return;
+    setListening(false);
+    try { recognition.stop(); } catch(e) {}
+  });
+
+  mailBtn.addEventListener('click', () => {
+    if (todos.length === 0) { alert('タスクがありません'); return; }
+    const lines = todos.map(t => (t.done ? '[完了] ' : '') + t.text).join('\n');
+    const subject = encodeURIComponent('Todoリスト');
+    const body = encodeURIComponent(lines);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  });
+
+  // 長押しクリア
+  function startClearPress() {
+    if (todos.length === 0) return;
+    clearBtn.classList.add('pressing');
+    clearTimer = setTimeout(() => {
+      todos = [];
+      render();
+      clearBtn.classList.remove('pressing');
+    }, LONG_PRESS_MS);
+  }
+
+  function cancelClearPress() {
+    clearTimeout(clearTimer);
+    clearBtn.classList.remove('pressing');
+  }
+
+  clearBtn.addEventListener('mousedown', startClearPress);
+  clearBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startClearPress(); }, { passive: false });
+  clearBtn.addEventListener('mouseup', cancelClearPress);
+  clearBtn.addEventListener('mouseleave', cancelClearPress);
+  clearBtn.addEventListener('touchend', cancelClearPress);
+  clearBtn.addEventListener('touchcancel', cancelClearPress);
+  // クリックは無効化（長押しのみ）
+  clearBtn.addEventListener('click', (e) => e.preventDefault());
 
   function addTodo(text) {
     text = text.trim();
@@ -345,20 +436,6 @@
   }
 
   render();
-
-  // メール送信
-  mailBtn.addEventListener('click', () => {
-    if (todos.length === 0) {
-      alert('タスクがありません');
-      return;
-    }
-    const lines = todos
-      .map((t, i) => `${i + 1}. ${t.done ? '[完了] ' : ''}${t.text}`)
-      .join('\n');
-    const subject = encodeURIComponent('Todoリスト');
-    const body = encodeURIComponent(lines);
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
-  });
 </script>
 </body>
 </html>
