@@ -46,25 +46,25 @@
 
   .main { padding: 32px 20px; display: flex; flex-direction: column; align-items: center; gap: 32px; }
 
-  /* CONTROLS: 3ボタン横並び + クリアボタン左下 */
-  .controls-wrap { width: 100%; display: flex; flex-direction: column; gap: 10px; }
-
-  .controls-row {
+  /* 4ボタン横並び */
+  .controls {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 8px;
+    width: 100%;
   }
 
   .ctrl-btn {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 7px; padding: 16px 8px;
+    gap: 6px; padding: 14px 4px;
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 16px; cursor: pointer; font-family: inherit;
-    transition: all 0.18s; color: var(--muted); font-size: 11px;
+    transition: border-color 0.18s, background 0.18s, color 0.18s;
+    color: var(--muted); font-size: 10px;
     -webkit-appearance: none; user-select: none;
+    position: relative; overflow: hidden;
   }
-  .ctrl-btn svg { width: 24px; height: 24px; flex-shrink: 0; }
-  .ctrl-btn:active { transform: scale(0.94); }
+  .ctrl-btn svg { width: 22px; height: 22px; flex-shrink: 0; }
 
   #start-btn { border-color: rgba(124,106,247,0.3); }
   #start-btn.active {
@@ -89,44 +89,27 @@
     color: var(--green);
   }
 
-  /* CLEAR BUTTON — 左端・小さめ・長押し */
-  .clear-row { display: flex; align-items: center; gap: 10px; }
-
-  #clear-btn {
-    position: relative; overflow: hidden;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 5px; padding: 10px 14px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; cursor: pointer; font-family: inherit;
-    color: var(--muted); font-size: 10px;
-    -webkit-appearance: none; user-select: none;
-    transition: border-color 0.2s, color 0.2s;
-    width: 72px;
+  /* クリアボタン */
+  #clear-btn { border-color: rgba(248,113,113,0.2); }
+  #clear-btn.pressing {
+    border-color: var(--danger);
+    color: var(--danger);
+    background: rgba(248,113,113,0.08);
   }
-  #clear-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
 
-  /* 長押しプログレスバー */
-  #clear-btn::after {
-    content: '';
+  /* プログレスバー — ボタン上端 */
+  #clear-progress {
     position: absolute;
-    bottom: 0; left: 0;
+    top: 0; left: 0;
     height: 3px;
     width: 0%;
     background: var(--danger);
-    border-radius: 0 0 12px 12px;
+    border-radius: 16px 16px 0 0;
     transition: none;
   }
-  #clear-btn.pressing {
-    border-color: rgba(248,113,113,0.4);
-    color: var(--danger);
-  }
-  #clear-btn.pressing::after {
+  #clear-btn.pressing #clear-progress {
     width: 100%;
     transition: width 0.8s linear;
-  }
-
-  .clear-hint {
-    font-size: 11px; color: var(--muted); opacity: 0.6;
   }
 
   /* STATUS */
@@ -206,46 +189,42 @@
 
 <div class="main">
 
-  <div class="controls-wrap">
-    <div class="controls-row">
-      <button class="ctrl-btn" id="start-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="9" y="2" width="6" height="11" rx="3"/>
-          <path d="M5 10a7 7 0 0 0 14 0"/>
-          <line x1="12" y1="19" x2="12" y2="22"/>
-          <line x1="8" y1="22" x2="16" y2="22"/>
-        </svg>
-        録音開始
-      </button>
+  <div class="controls">
+    <button class="ctrl-btn" id="start-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="2" width="6" height="11" rx="3"/>
+        <path d="M5 10a7 7 0 0 0 14 0"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+        <line x1="8" y1="22" x2="16" y2="22"/>
+      </svg>
+      録音開始
+    </button>
 
-      <button class="ctrl-btn" id="stop-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="4" y="4" width="16" height="16" rx="2"/>
-        </svg>
-        録音停止
-      </button>
+    <button class="ctrl-btn" id="stop-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="4" width="16" height="16" rx="2"/>
+      </svg>
+      録音停止
+    </button>
 
-      <button class="ctrl-btn" id="mail-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="4" width="20" height="16" rx="2"/>
-          <path d="M2 7l10 7 10-7"/>
-        </svg>
-        メール送信
-      </button>
-    </div>
+    <button class="ctrl-btn" id="mail-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <path d="M2 7l10 7 10-7"/>
+      </svg>
+      メール送信
+    </button>
 
-    <div class="clear-row">
-      <button id="clear-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-          <path d="M10 11v6M14 11v6"/>
-          <path d="M9 6V4h6v2"/>
-        </svg>
-        クリア
-      </button>
-      <span class="clear-hint">長押しで削除</span>
-    </div>
+    <button class="ctrl-btn" id="clear-btn">
+      <div id="clear-progress"></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        <path d="M10 11v6M14 11v6"/>
+        <path d="M9 6V4h6v2"/>
+      </svg>
+      長押しで<br>クリア
+    </button>
   </div>
 
   <div class="status-wrap">
@@ -396,7 +375,6 @@
   clearBtn.addEventListener('mouseleave', cancelClearPress);
   clearBtn.addEventListener('touchend', cancelClearPress);
   clearBtn.addEventListener('touchcancel', cancelClearPress);
-  // クリックは無効化（長押しのみ）
   clearBtn.addEventListener('click', (e) => e.preventDefault());
 
   function addTodo(text) {
