@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>音声タスク</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --border: #e0e0e5;
+    --accent: #5b4ef8;
+    --accent-light: #ede9fe;
+    --text: #1a1a2e;
+    --muted: #888899;
+    --danger: #ef4444;
+    --green: #22c55e;
+    --radius: 16px;
+  }
+
+  body {
+    font-family: -apple-system, 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 480px;
+    padding: 48px 20px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* MIC BUTTON */
+  .mic-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  #mic-btn {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: none;
+    background: var(--surface);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+    -webkit-appearance: none;
+  }
+
+  #mic-btn svg {
+    width: 32px;
+    height: 32px;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+
+  #mic-btn.active {
+    background: var(--accent);
+    box-shadow: 0 0 0 12px rgba(91,78,248,0.15), 0 4px 20px rgba(91,78,248,0.4);
+    animation: mic-pulse 1.4s ease-in-out infinite;
+  }
+
+  #mic-btn.active svg { color: #fff; }
+
+  @keyframes mic-pulse {
+    0%, 100% { box-shadow: 0 0 0 12px rgba(91,78,248,0.15), 0 4px 20px rgba(91,78,248,0.4); }
+    50%       { box-shadow: 0 0 0 20px rgba(91,78,248,0.07), 0 4px 20px rgba(91,78,248,0.4); }
+  }
+
+  #mic-btn:active { transform: scale(0.93); }
+
+  #status {
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    min-height: 20px;
+    transition: color 0.2s;
+  }
+
+  #status.active { color: var(--accent); font-weight: 500; }
+
+  #interim {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+    text-align: center;
+    min-height: 18px;
+    padding: 0 12px;
+  }
+
+  /* LIST */
+  .list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .list-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .header-actions { display: flex; gap: 8px; }
+
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    transition: all 0.15s;
+    -webkit-appearance: none;
+  }
+
+  .icon-btn svg { width: 16px; height: 16px; }
+  .icon-btn:active { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+
+  #todo-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .todo-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 14px;
+    animation: slide-in 0.2s ease;
+    transition: opacity 0.2s;
+  }
+
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .todo-item.done { opacity: 0.4; }
+  .todo-item.done .todo-text { text-decoration: line-through; }
+
+  .check-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    -webkit-appearance: none;
+  }
+
+  .check-btn.checked {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .check-btn.checked::after {
+    content: '';
+    display: block;
+    width: 5px;
+    height: 9px;
+    border: 2px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg) translate(-1px, -1px);
+  }
+
+  .todo-text {
+    flex: 1;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text);
+  }
+
+  .del-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    line-height: 1;
+    -webkit-appearance: none;
+  }
+
+  .del-btn:active { background: #fee2e2; color: var(--danger); }
+
+  #empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 40px 0;
+    line-height: 2.2;
+  }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text);
+    color: #fff;
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div>
+    <h1>音声タスク</h1>
+    <div class="sub">マイクボタンを押して話すと追加されます</div>
+  </div>
+
+  <div class="mic-wrap">
+    <button id="mic-btn" aria-label="録音">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="2" width="6" height="11" rx="3"/>
+        <path d="M5 10a7 7 0 0 0 14 0"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+        <line x1="8" y1="22" x2="16" y2="22"/>
+      </svg>
+    </button>
+    <div id="status">タップして録音</div>
+    <div id="interim"></div>
+  </div>
+
+  <div>
+    <div class="list-header">
+      <span class="list-title">タスク <span id="count"></span></span>
+      <div class="header-actions">
+        <button class="icon-btn" id="copy-btn" title="コピー">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="clear-btn" title="すべて削除">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M9 6V4h6v2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <ul id="todo-list"></ul>
+  <div id="empty">タスクがまだありません<br><span style="font-size:12px">マイクボタンを押して話してみてください</span></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'voice-tasks-v1';
+  let todos = load();
+  let listening = false;
+  let recognition = null;
+
+  const micBtn    = document.getElementById('mic-btn');
+  const statusEl  = document.getElementById('status');
+  const interimEl = document.getElementById('interim');
+  const listEl    = document.getElementById('todo-list');
+  const emptyEl   = document.getElementById('empty');
+  const countEl   = document.getElementById('count');
+  const copyBtn   = document.getElementById('copy-btn');
+  const clearBtn  = document.getElementById('clear-btn');
+  const toastEl   = document.getElementById('toast');
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SR) {
+    statusEl.textContent = 'このブラウザは音声認識に対応していません';
+    micBtn.disabled = true;
+  } else {
+    initRecognition();
+  }
+
+  function initRecognition() {
+    recognition = new SR();
+    recognition.lang = 'ja-JP';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => {
+      statusEl.textContent = '聞いています...';
+      statusEl.classList.add('active');
+    };
+
+    recognition.onresult = (e) => {
+      let interim = '', final = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        e.results[i].isFinal ? (final += t) : (interim += t);
+      }
+      interimEl.textContent = interim;
+      if (final.trim()) {
+        splitIntoTasks(final.trim()).forEach(addTodo);
+        interimEl.textContent = '';
+      }
+    };
+
+    recognition.onerror = (e) => {
+      if (e.error === 'no-speech') {
+        if (listening) restart();
+      } else {
+        setListening(false);
+      }
+    };
+
+    recognition.onend = () => {
+      if (listening) restart();
+      else showIdle();
+    };
+  }
+
+  function splitIntoTasks(text) {
+    return text
+      .split(/[、。,.，\n]|(?:あと|それと|そして|また|次に)(?=\S)/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+  }
+
+  function restart() {
+    interimEl.textContent = '';
+    setTimeout(() => { if (listening) try { recognition.start(); } catch(e) {} }, 150);
+  }
+
+  function showIdle() {
+    statusEl.textContent = 'タップして録音';
+    statusEl.classList.remove('active');
+    interimEl.textContent = '';
+  }
+
+  function setListening(val) {
+    listening = val;
+    micBtn.classList.toggle('active', val);
+  }
+
+  micBtn.addEventListener('click', () => {
+    if (!SR) return;
+    if (listening) {
+      setListening(false);
+      try { recognition.stop(); } catch(e) {}
+    } else {
+      setListening(true);
+      try { recognition.start(); } catch(e) {}
+    }
+  });
+
+  copyBtn.addEventListener('click', () => {
+    if (todos.length === 0) { toast('タスクがありません'); return; }
+    const text = todos.map(t => (t.done ? '[完了] ' : '[ ] ') + t.text).join('\n');
+    navigator.clipboard.writeText(text).then(() => toast('コピーしました'));
+  });
+
+  clearBtn.addEventListener('click', () => {
+    if (todos.length === 0) return;
+    if (!confirm('すべてのタスクを削除しますか？')) return;
+    todos = [];
+    save();
+    render();
+  });
+
+  function addTodo(text) {
+    text = text.trim();
+    if (!text) return;
+    todos.unshift({ id: Date.now() + Math.random(), text, done: false });
+    save();
+    render();
+  }
+
+  function render() {
+    listEl.innerHTML = '';
+    const total = todos.length;
+    countEl.textContent = total > 0 ? `(${total})` : '';
+    emptyEl.style.display = total ? 'none' : 'block';
+
+    todos.forEach(t => {
+      const li = document.createElement('li');
+      li.className = 'todo-item' + (t.done ? ' done' : '');
+
+      const check = document.createElement('button');
+      check.className = 'check-btn' + (t.done ? ' checked' : '');
+      check.setAttribute('aria-label', t.done ? '未完了に戻す' : '完了にする');
+      check.addEventListener('click', () => { t.done = !t.done; save(); render(); });
+
+      const span = document.createElement('span');
+      span.className = 'todo-text';
+      span.textContent = t.text;
+
+      const del = document.createElement('button');
+      del.className = 'del-btn';
+      del.innerHTML = '&times;';
+      del.setAttribute('aria-label', '削除');
+      del.addEventListener('click', () => { todos = todos.filter(x => x.id !== t.id); save(); render(); });
+
+      li.append(check, span, del);
+      listEl.appendChild(li);
+    });
+  }
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+  }
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2000);
+  }
+
+  render();
+</script>
+</body>
+</html>
